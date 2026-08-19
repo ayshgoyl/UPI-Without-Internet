@@ -9,6 +9,7 @@ spring:
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
   kafka:
