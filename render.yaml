@@ -122,8 +122,3 @@ services:
       - key: SSL_ENABLED
         value: "false"
 
-  - type: web
-    name: frontend
-    env: static
-    buildCommand: "echo 'Frontend ready'"
-    staticPublishPath: ./frontend
