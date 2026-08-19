@@ -12,5 +12,6 @@ spring:
       sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
     ssl:
       trust-store-certificates: ${KAFKA_CA_CERT:}
+      trust-store-type: PEM
     consumer:
       group-id: sync-group
