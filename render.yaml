@@ -1,0 +1,129 @@
+databases:
+  - name: offline-upi-db
+    plan: free
+    databaseName: offline_upi
+    user: offline_upi
+
+envVarGroups:
+  - name: kafka-config
+    envVars:
+      - key: KAFKA_BOOTSTRAP_SERVERS
+        sync: false
+      - key: KAFKA_SECURITY_PROTOCOL
+        value: SASL_SSL
+      - key: KAFKA_SASL_MECHANISM
+        value: SCRAM-SHA-256
+      - key: KAFKA_SASL_JAAS_CONFIG
+        sync: false
+      - key: KAFKA_CA_CERT
+        sync: false
+
+services:
+  # Public entry point — serves frontend + proxies API (same origin, no CORS)
+  - type: web
+    name: api-gateway
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: USER_SERVICE_HOSTPORT
+        fromService:
+          type: web
+          name: user-account-service
+          property: hostport
+      - key: PAYMENT_SERVICE_HOSTPORT
+        fromService:
+          type: web
+          name: payment-transaction-service
+          property: hostport
+
+  - type: web
+    name: user-account-service
+    runtime: docker
+    dockerfilePath: ./user-account-service/Dockerfile
+    dockerContext: .
+    plan: free
+
+  - type: web
+    name: payment-transaction-service
+    runtime: docker
+    dockerfilePath: ./payment-transaction-service/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: offline-upi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: offline-upi-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: offline-upi-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: offline-upi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: offline-upi-db
+          property: password
+      - fromGroup: kafka-config
+
+  - type: web
+    name: sync-notification-service
+    runtime: docker
+    dockerfilePath: ./sync-notification-service/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - fromGroup: kafka-config
+
+  - type: web
+    name: wallet-balance-service
+    runtime: docker
+    dockerfilePath: ./wallet-balance-service/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: offline-upi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: offline-upi-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: offline-upi-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: offline-upi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: offline-upi-db
+          property: password
+
+  - type: web
+    name: qr-payment-service
+    runtime: docker
+    dockerfilePath: ./qr-payment-service/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: SSL_ENABLED
+        value: "false"
+
+  - type: web
+    name: frontend
+    env: static
+    buildCommand: "echo 'Frontend ready'"
+    staticPublishPath: ./frontend
