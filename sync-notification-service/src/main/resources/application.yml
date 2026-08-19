@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:8083}
+
+spring:
+  application:
+    name: sync-notification-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-256}
+      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
+    ssl:
+      trust-store-certificates: ${KAFKA_CA_CERT:}
+    consumer:
+      group-id: sync-group

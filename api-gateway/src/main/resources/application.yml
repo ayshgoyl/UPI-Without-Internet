@@ -1,0 +1,30 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  webflux:
+    static-path-pattern: /**
+  cloud:
+    gateway:
+      routes:
+        - id: user-account-service
+          uri: http://${USER_SERVICE_HOSTPORT:localhost:8081}
+          predicates:
+            - Path=/api/v1/users/**
+        - id: payment-transaction-service
+          uri: http://${PAYMENT_SERVICE_HOSTPORT:localhost:8082}
+          predicates:
+            - Path=/api/v1/payments/**
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: User Service
+        url: /api/v1/users/v3/api-docs
+      - name: Payment Service
+        url: /api/v1/payments/v3/api-docs

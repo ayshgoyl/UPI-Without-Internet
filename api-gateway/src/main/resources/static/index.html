@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline UPI Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-bolt logo-icon"></i>
+                <h1>UPI Offline</h1>
+            </div>
+            <div class="network-status" id="network-status">
+                <span class="status-indicator online"></span>
+                <span class="status-text">Online</span>
+            </div>
+        </header>
+
+        <section class="payment-card glass-panel">
+            <div class="card-header">
+                <h2>Send Money</h2>
+                <p>Transfer instantly, even offline</p>
+            </div>
+
+            <form id="payment-form">
+                <div class="input-group">
+                    <label for="upi-id">UPI ID / Phone Number</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user icon"></i>
+                        <input type="text" id="upi-id" placeholder="example@upi" required autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="amount">Amount (₹)</label>
+                    <div class="input-wrapper amount-wrapper">
+                        <span class="currency-symbol">₹</span>
+                        <input type="number" id="amount" placeholder="0" min="1" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="note">Note (Optional)</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-pencil icon"></i>
+                        <input type="text" id="note" placeholder="What's this for?" autocomplete="off">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="pay-btn">
+                    <span class="btn-text">Pay Now</span>
+                    <div class="spinner hidden"></div>
+                </button>
+            </form>
+
+            <div id="payment-result" class="result-message hidden">
+                <div class="result-icon">
+                    <i class="fa-solid fa-check-circle" id="result-icon-fa"></i>
+                </div>
+                <h3 id="result-title">Success</h3>
+                <p id="result-text">Payment completed successfully.</p>
+                <button id="new-payment-btn" class="btn-secondary">New Payment</button>
+            </div>
+        </section>
+
+        <section class="recent-transactions">
+            <h3>Recent Activity</h3>
+            <div class="transaction-list">
+                <div class="transaction-item">
+                    <div class="tx-icon receive"><i class="fa-solid fa-arrow-down"></i></div>
+                    <div class="tx-details">
+                        <span class="tx-name">Alice Smith</span>
+                        <span class="tx-time">Today, 10:30 AM</span>
+                    </div>
+                    <div class="tx-amount positive">+₹500</div>
+                </div>
+                <div class="transaction-item offline-queued">
+                    <div class="tx-icon offline"><i class="fa-solid fa-clock"></i></div>
+                    <div class="tx-details">
+                        <span class="tx-name">Coffee Shop</span>
+                        <span class="tx-time">Offline • Queued</span>
+                    </div>
+                    <div class="tx-amount negative">-₹120</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>
