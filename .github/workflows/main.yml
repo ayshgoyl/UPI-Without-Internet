@@ -1,0 +1,8 @@
+jobs:
+  render-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render Blueprint Sync
+        run: |
+          curl -X POST "${{ secrets.RENDER_BLUEPRINT_SYNC_HOOK }}"
