@@ -12,21 +12,3 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    properties:
-      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
-      sasl.mechanism: ${KAFKA_SASL_MECHANISM:SCRAM-SHA-256}
-      sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG:}
-    ssl:
-      trust-store-certificates: ${KAFKA_CA_CERT:}
-      trust-store-type: PEM
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      bankingServer:
-        sliding-window-size: 5
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
-        permitted-number-of-calls-in-half-open-state: 2

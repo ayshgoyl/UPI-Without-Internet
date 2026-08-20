@@ -1,30 +1,29 @@
-# Offline-First UPI Payment Platform
+# UPI Payment Platform
 
-This project is a microservices-based, offline-first UPI payment platform designed to handle transactions without continuous internet connectivity, utilizing idempotent processing and resilient retry mechanisms.
+This project is a microservices-based UPI payment platform. The frontend sends payment requests through the API Gateway directly to the Payment Transaction Service. There is no Kafka queue, offline transaction buffer, circuit breaker fallback, or retry worker in the simplified flow.
 
 ## Prerequisites & Requirements
 
 Before you begin, ensure you have the following installed on your system:
 - **Java Development Kit (JDK) 21**: Required for Spring Boot 3.5 compatibility.
 - **Apache Maven (3.8+)**: For building the project and managing dependencies.
-- **Docker & Docker Compose**: To easily run databases (PostgreSQL) and message brokers (Kafka/RabbitMQ) locally.
+- **Docker & Docker Compose**: Useful for running PostgreSQL locally.
 - **Git**: For version control.
 
 ## Project Structure
 
 The project is structured as a Maven multi-module repository containing:
 1. `user-account-service`: Manages JWT authentication and RBAC.
-2. `payment-transaction-service`: Handles graceful degradation using Resilience4j circuit breakers.
-3. `wallet-balance-service`: Manages offline balances with pessimistic database locking.
+2. `payment-transaction-service`: Handles payment transaction requests.
+3. `wallet-balance-service`: Manages balances with pessimistic database locking.
 4. `qr-payment-service`: Enforces HTTPS/TLS for secure QR code data processing.
-5. `sync-notification-service`: Syncs offline transactions utilizing Exponential Backoff.
-6. `api-gateway`: Aggregates OpenAPI specs and routes traffic.
+5. `api-gateway`: Serves the phone UI and routes traffic.
 
 ## Setup & Installation
 
 ### 1. Database & Broker Setup (Docker)
 Since this is a DevOps project, it is highly recommended to run your infrastructure via Docker.
-*Currently, the project uses in-memory or generic JPA settings, but for full functionality, you should start PostgreSQL and Kafka.*
+*For full functionality, start PostgreSQL or configure each service to point to an available PostgreSQL instance.*
 ```bash
 # If you create a docker-compose.yml in the root:
 docker-compose up -d
@@ -57,11 +56,6 @@ mvn spring-boot:run -pl user-account-service -Dspring-boot.run.arguments="--serv
 mvn spring-boot:run -pl payment-transaction-service -Dspring-boot.run.arguments="--server.port=8082"
 ```
 
-**Start Sync Notification Service (Port 8083):**
-```bash
-mvn spring-boot:run -pl sync-notification-service
-```
-
 **Start QR Payment Service (Port 8085 — HTTP locally, HTTPS optional):**
 ```bash
 mvn spring-boot:run -pl qr-payment-service
@@ -74,19 +68,14 @@ This project includes a `render.yaml` Blueprint for one-click deployment.
 
 ### Infrastructure
 - **Render PostgreSQL** — shared database for payment and wallet services
-- **Aiven Kafka** — message broker for offline payment events
 - **Render Web Services** — one Docker container per microservice
 
 ### Steps
 
 1. Push this repo to GitHub.
 2. In [Render Dashboard](https://dashboard.render.com), create a **New Blueprint** and connect the repo.
-3. Render will provision `offline-upi-db` and all six web services from `render.yaml`.
-4. Set these **secret env vars** on `payment-transaction-service` and `sync-notification-service` (from your Aiven Kafka console):
-   - `KAFKA_BOOTSTRAP_SERVERS` — e.g. `kafka-xxx.aivencloud.com:12345`
-   - `KAFKA_SASL_JAAS_CONFIG` — e.g. `org.apache.kafka.common.security.scram.ScramLoginModule required username="avnadmin" password="YOUR_PASSWORD";`
-   - `KAFKA_CA_CERT` — paste the full CA certificate PEM from Aiven
-5. Once deployed, open the **api-gateway** URL — the frontend UI and API are served from the same origin.
+3. Render will provision `offline-upi-db` and the web services from `render.yaml`.
+4. Once deployed, open the **api-gateway** URL — the frontend UI and API are served from the same origin.
 
 ### Local Docker build (same as Render)
 ```bash
@@ -106,7 +95,9 @@ To verify the QR service is enforcing TLS:
 - Attempt to curl it using standard HTTP: `curl http://localhost:8443` (This should fail or reject the connection).
 - Access it securely using HTTPS: `https://localhost:8443` (You may need to bypass the local self-signed certificate warning in your browser).
 
-### 3. Graceful Degradation & Exponential Backoff
-To test these features:
-- **Graceful Degradation**: Stop the `wallet-balance-service`. Send a payment request to the `payment-transaction-service`. The service's `@CircuitBreaker` should catch the connection failure and fallback to offline queuing.
-- **Exponential Backoff**: Check the logs of the `sync-notification-service` when it attempts to sync queued transactions without network connectivity. You should see retry attempts spaced out (e.g., 2 seconds, 4 seconds, 8 seconds).
+### 3. Payment Flow Verification
+To verify the simplified payment path:
+- Start the `api-gateway` and `payment-transaction-service`.
+- Dial `*99#` in the frontend, choose Send Money, and complete the MPIN prompt.
+- A successful request returns `Payment completed successfully` from `/api/v1/payments/initiate`.
+- A failed request is shown as a failed payment, not as a queued transaction.

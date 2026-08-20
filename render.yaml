@@ -4,20 +4,6 @@ databases:
     databaseName: offline_upi
     user: offline_upi
 
-envVarGroups:
-  - name: kafka-config
-    envVars:
-      - key: KAFKA_BOOTSTRAP_SERVERS
-        sync: false
-      - key: KAFKA_SECURITY_PROTOCOL
-        value: SASL_SSL
-      - key: KAFKA_SASL_MECHANISM
-        value: SCRAM-SHA-256
-      - key: KAFKA_SASL_JAAS_CONFIG
-        sync: false
-      - key: KAFKA_CA_CERT
-        sync: false
-
 services:
   # Public entry point — serves frontend + proxies API (same origin, no CORS)
   - type: web
@@ -76,17 +62,6 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
-      - fromGroup: kafka-config
-
-  - type: web
-    name: sync-notification-service
-    runtime: docker
-    dockerfilePath: ./sync-notification-service/Dockerfile
-    dockerContext: .
-    plan: free
-    autoDeployTrigger: commit
-    envVars:
-      - fromGroup: kafka-config
 
   - type: web
     name: wallet-balance-service
@@ -127,4 +102,3 @@ services:
     envVars:
       - key: SSL_ENABLED
         value: "false"
-

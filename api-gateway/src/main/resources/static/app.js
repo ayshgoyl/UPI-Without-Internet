@@ -161,9 +161,8 @@
                 '3 Mini Statement\n' +
                 '4 My Account (User)\n' +
                 '5 QR / Collect (QR Svc)\n' +
-                '6 Sync Offline Txns\n' +
-                '7 Change MPIN\n' +
-                '8 Service Map\n' +
+                '6 Change MPIN\n' +
+                '7 Service Map\n' +
                 '0 Exit'
         });
     }
@@ -321,9 +320,6 @@
                 });
                 break;
             case '6':
-                syncOffline();
-                break;
-            case '7':
                 state.pendingPinAction = 'changepin';
                 openUssd({
                     title: 'Change MPIN',
@@ -331,7 +327,7 @@
                     body: 'Enter current MPIN:'
                 });
                 break;
-            case '8':
+            case '7':
                 openUssd({
                     title: 'Service Map',
                     screen: 'end',
@@ -339,10 +335,9 @@
                     body:
                         '1 Payment txn svc : Send money\n' +
                         '2 Wallet balance  : Check bal\n' +
-                        '3 Mini statement  : Local + queued\n' +
+                        '3 Mini statement  : Local demo history\n' +
                         '4 User account    : Profile / MPIN\n' +
                         '5 QR payment svc  : Collect / pay\n' +
-                        '6 Sync notify svc : Retry / backoff\n' +
                         'Gateway : this phone UI\n\n' +
                         'Cancel to close.'
                 });
@@ -351,7 +346,7 @@
                 closeUssd();
                 break;
             default:
-                toastBody('Invalid option. Try 0-8.');
+                toastBody('Invalid option. Try 0-7.');
         }
     }
 
@@ -434,7 +429,7 @@
                 screen: 'end',
                 input: false,
                 body:
-                    'Available (offline wallet)\n₹' +
+                    'Available wallet balance\n₹' +
                     formatMoney(state.balance) +
                     '\nLocked writes use pessimistic DB lock on wallet-balance-service.\n\nCancel to close.'
             });
@@ -485,33 +480,26 @@
                 })
             });
             const text = await response.text();
-            const queued = !response.ok || /offline|queued|unreachable/i.test(text);
+            if (!response.ok) {
+                throw new Error(text || 'Payment service returned HTTP ' + response.status);
+            }
             const idMatch = text.match(/Transaction ID:\s*(\S+)/i);
             const txnId = idMatch ? idMatch[1] : crypto.randomUUID();
 
-            if (queued) {
-                state.statements.unshift({
-                    dir: 'DR',
-                    party: state.payee,
-                    amount: Number(state.amount),
-                    note: 'Queued'
-                });
-            } else {
-                state.balance = Math.max(0, state.balance - Number(state.amount));
-                state.statements.unshift({
-                    dir: 'DR',
-                    party: state.payee,
-                    amount: Number(state.amount),
-                    note: 'Success'
-                });
-            }
+            state.balance = Math.max(0, state.balance - Number(state.amount));
+            state.statements.unshift({
+                dir: 'DR',
+                party: state.payee,
+                amount: Number(state.amount),
+                note: 'Success'
+            });
 
             openUssd({
                 title: 'Send Money',
                 screen: 'end',
                 input: false,
                 body:
-                    (queued ? 'Queued offline (circuit open).\n' : 'Accepted.\n') +
+                    'Accepted.\n' +
                     'To: ' + state.payee + '\n' +
                     'Amt: ₹' + state.amount + '\n' +
                     'Txn: ' + txnId + '\n\n' +
@@ -519,62 +507,16 @@
                     '\n\nCancel to close.'
             });
         } catch (err) {
-            const txnId = crypto.randomUUID();
-            state.statements.unshift({
-                dir: 'DR',
-                party: state.payee,
-                amount: Number(state.amount),
-                note: 'Local queue'
-            });
             openUssd({
                 title: 'Send Money',
                 screen: 'end',
                 input: false,
                 body:
-                    'Network error. Stored locally.\n' +
+                    'Payment failed.\n' +
                     'To: ' + state.payee + '\n' +
                     'Amt: ₹' + state.amount + '\n' +
-                    'Txn: ' + txnId + '\nUse option 6 to sync.\n\nCancel to close.'
-            });
-        }
-    }
-
-    async function syncOffline() {
-        openUssd({
-            title: 'Sync',
-            screen: 'end',
-            input: false,
-            body: 'Contacting sync-notification-service…\nExponential backoff 2s, 4s, 8s, 16s'
-        });
-
-        const queued = state.statements.filter((tx) => tx.note === 'Queued' || tx.note === 'Local queue');
-        try {
-            await fetch('/api/v1/payments/initiate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ upiId: 'sync@upi', amount: '0', note: 'USSD-SYNC' })
-            });
-            queued.forEach((tx) => {
-                tx.note = 'Sync attempted';
-            });
-            openUssd({
-                title: 'Sync',
-                screen: 'end',
-                input: false,
-                body:
-                    'Sync request published to Kafka\n(offline-payments-topic).\n' +
-                    queued.length +
-                    ' queued item(s) handed to retry worker.\n\nCancel to close.'
-            });
-        } catch (err) {
-            openUssd({
-                title: 'Sync',
-                screen: 'end',
-                input: false,
-                body:
-                    'Sync worker unreachable.\n' +
-                    queued.length +
-                    ' txn(s) remain queued.\nWill retry with backoff.\n\nCancel to close.'
+                    'Reason: ' + (err.message || 'Unable to reach payment service') +
+                    '\n\nCancel to close.'
             });
         }
     }

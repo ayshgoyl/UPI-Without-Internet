@@ -20,7 +20,6 @@
         <module>payment-transaction-service</module>
         <module>wallet-balance-service</module>
         <module>qr-payment-service</module>
-        <module>sync-notification-service</module>
         <module>api-gateway</module>
     </modules>
 
