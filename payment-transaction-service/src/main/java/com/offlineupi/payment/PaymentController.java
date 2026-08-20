@@ -1,6 +1,8 @@
 package com.offlineupi.payment;
 
+import com.offlineupi.payment.entity.PaymentDetail;
 import com.offlineupi.payment.entity.PaymentTransaction;
+import com.offlineupi.payment.repository.PaymentDetailRepository;
 import com.offlineupi.payment.repository.PaymentTransactionRepository;
 import java.time.Instant;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/payments")
 public class PaymentController {
     private final PaymentTransactionRepository paymentTransactionRepository;
+    private final PaymentDetailRepository paymentDetailRepository;
 
-    public PaymentController(PaymentTransactionRepository paymentTransactionRepository) {
+    public PaymentController(PaymentTransactionRepository paymentTransactionRepository, PaymentDetailRepository paymentDetailRepository) {
         this.paymentTransactionRepository = paymentTransactionRepository;
+        this.paymentDetailRepository = paymentDetailRepository;
     }
 
     public record UssdPaymentRequest(String upiId, String amount, String note) {
@@ -29,6 +33,8 @@ public class PaymentController {
         String note = request != null && request.note() != null ? request.note() : "";
         paymentTransactionRepository.save(
                 new PaymentTransaction(generatedTransactionId, payee, amount, note, "SUCCESS", Instant.now()));
+        paymentDetailRepository.save(
+                new PaymentDetail(generatedTransactionId, payee, amount, note, "SUCCESS", Instant.now()));
         return ResponseEntity.ok(
                 "Payment completed successfully. "
                         + "Payee: " + payee + ", Amount: " + amount
