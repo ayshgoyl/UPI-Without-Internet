@@ -55,6 +55,8 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
+      - key: DB_SSLMODE
+        value: disable
 
   - type: web
     name: user-account-service
@@ -84,6 +86,8 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
+      - key: DB_SSLMODE
+        value: disable
 
   - type: web
     name: payment-transaction-service
@@ -113,6 +117,8 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
+      - key: DB_SSLMODE
+        value: disable
 
   - type: web
     name: wallet-balance-service
@@ -142,6 +148,8 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
+      - key: DB_SSLMODE
+        value: disable
 
   - type: web
     name: qr-payment-service
@@ -173,3 +181,5 @@ services:
         fromDatabase:
           name: offline-upi-db
           property: password
+      - key: DB_SSLMODE
+        value: disable
