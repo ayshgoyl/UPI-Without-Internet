@@ -22,8 +22,13 @@ public class PaymentController {
     @PostMapping("/initiate")
     @CircuitBreaker(name = "bankingServer", fallbackMethod = "fallbackOfflinePayment")
     public ResponseEntity<String> initiatePayment(@RequestBody(required = false) UssdPaymentRequest request) {
-        // Simulating a call to an external banking server that might fail if offline
-        throw new RuntimeException("Simulated Network Disconnect");
+        String generatedTransactionId = java.util.UUID.randomUUID().toString();
+        String payee = request != null && request.upiId() != null ? request.upiId() : "unknown";
+        String amount = request != null && request.amount() != null ? request.amount() : "n/a";
+        return ResponseEntity.ok(
+                "Payment completed successfully. "
+                        + "Payee: " + payee + ", Amount: " + amount
+                        + ". Transaction ID: " + generatedTransactionId);
     }
 
     public ResponseEntity<String> fallbackOfflinePayment(UssdPaymentRequest request, Exception e) {

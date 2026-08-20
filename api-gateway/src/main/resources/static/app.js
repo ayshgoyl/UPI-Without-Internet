@@ -32,7 +32,7 @@
         pendingPinAction: null,
         statements: [
             { dir: 'CR', party: 'Alice', amount: 500, note: 'Settled' },
-            { dir: 'DR', party: 'Coffee Shop', amount: 120, note: 'Queued' }
+            { dir: 'DR', party: 'Coffee Shop', amount: 120, note: 'Success' }
         ]
     };
 
