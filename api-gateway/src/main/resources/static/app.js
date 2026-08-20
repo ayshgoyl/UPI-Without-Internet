@@ -167,7 +167,7 @@
         });
     }
 
-    function submitUssd() {
+    async function submitUssd() {
         const reply = ussdReply.value.trim();
         const screen = state.screen;
 
@@ -203,11 +203,11 @@
             return;
         }
         if (screen === 'pin') {
-            handlePin(reply);
+            await handlePin(reply);
             return;
         }
         if (screen === 'account') {
-            handleAccount(reply);
+            await handleAccount(reply);
             return;
         }
         if (screen === 'qr') {
@@ -218,6 +218,12 @@
             const amt = Number(reply);
             if (!amt || amt <= 0) return toastBody('Enter a valid amount');
             const ref = 'QR' + Date.now().toString(36).toUpperCase();
+            await recordQrPayment({
+                referenceId: ref,
+                actionType: 'COLLECT',
+                upiId: VPA,
+                amount: amt.toFixed(2)
+            });
             openUssd({
                 title: 'QR Payment',
                 screen: 'end',
@@ -234,6 +240,12 @@
         if (screen === 'qr.payref') {
             if (!reply) return toastBody('Enter QR reference');
             state.payee = 'qr:' + reply;
+            await recordQrPayment({
+                referenceId: reply,
+                actionType: 'PAY',
+                upiId: VPA,
+                amount: 'n/a'
+            });
             openUssd({
                 title: 'QR Pay',
                 screen: 'send.amount',
@@ -350,17 +362,18 @@
         }
     }
 
-    function handleAccount(reply) {
+    async function handleAccount(reply) {
         if (reply === '0') {
             openMainMenu();
             return;
         }
+        const profile = await fetchUserProfile();
         if (reply === '1') {
             openUssd({
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Linked mobile\n' + MSISDN + '\nSIM authenticated via USSD.\nCancel to close.'
+                body: 'Linked mobile\n' + profile.mobileNumber + '\nSIM authenticated via USSD.\nCancel to close.'
             });
             return;
         }
@@ -369,7 +382,7 @@
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Primary VPA\n' + VPA + '\nCancel to close.'
+                body: 'Primary VPA\n' + profile.upiId + '\nCancel to close.'
             });
             return;
         }
@@ -378,7 +391,7 @@
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Profile: CUSTOMER\nRBAC: payments, wallet-read, sync\nLanguage: EN\nCancel to close.'
+                body: 'Profile: ' + profile.roleName + '\nRBAC: payments, wallet-read\nLanguage: ' + profile.languageCode + '\nCancel to close.'
             });
             return;
         }
@@ -409,7 +422,7 @@
         toastBody('Invalid option.');
     }
 
-    function handlePin(reply) {
+    async function handlePin(reply) {
         if (reply !== state.mpin) {
             openUssd({
                 title: 'UPI',
@@ -424,6 +437,8 @@
         state.pendingPinAction = null;
 
         if (action === 'balance') {
+            const wallet = await fetchWalletBalance();
+            state.balance = Number(wallet.balance);
             openUssd({
                 title: 'Balance',
                 screen: 'end',
@@ -457,7 +472,7 @@
             return;
         }
         if (action === 'send') {
-            sendMoney();
+            await sendMoney();
         }
     }
 
@@ -518,6 +533,50 @@
                     'Reason: ' + (err.message || 'Unable to reach payment service') +
                     '\n\nCancel to close.'
             });
+        }
+    }
+
+    async function fetchUserProfile() {
+        try {
+            const response = await fetch('/api/v1/users/profile');
+            if (!response.ok) {
+                throw new Error('User service returned HTTP ' + response.status);
+            }
+            return await response.json();
+        } catch (err) {
+            return {
+                mobileNumber: MSISDN,
+                upiId: VPA,
+                roleName: 'CUSTOMER',
+                languageCode: 'EN'
+            };
+        }
+    }
+
+    async function fetchWalletBalance() {
+        try {
+            const response = await fetch('/api/v1/wallets/' + encodeURIComponent(VPA));
+            if (!response.ok) {
+                throw new Error('Wallet service returned HTTP ' + response.status);
+            }
+            return await response.json();
+        } catch (err) {
+            return {
+                upiId: VPA,
+                balance: state.balance
+            };
+        }
+    }
+
+    async function recordQrPayment(payload) {
+        try {
+            await fetch('/api/v1/qr/records', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            // QR service is non-critical for the phone demo screen.
         }
     }
 

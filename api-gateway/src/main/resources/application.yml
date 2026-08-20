@@ -4,6 +4,14 @@ server:
 spring:
   application:
     name: api-gateway
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:offline_upi}?sslmode=${DB_SSLMODE:require}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
   webflux:
     static-path-pattern: /**
   cloud:
@@ -17,6 +25,14 @@ spring:
           uri: http://${PAYMENT_SERVICE_HOSTPORT:localhost:8082}
           predicates:
             - Path=/api/v1/payments/**
+        - id: wallet-balance-service
+          uri: http://${WALLET_SERVICE_HOSTPORT:localhost:8084}
+          predicates:
+            - Path=/api/v1/wallets/**
+        - id: qr-payment-service
+          uri: http://${QR_SERVICE_HOSTPORT:localhost:8085}
+          predicates:
+            - Path=/api/v1/qr/**
 
 springdoc:
   api-docs:
@@ -28,3 +44,7 @@ springdoc:
         url: /api/v1/users/v3/api-docs
       - name: Payment Service
         url: /api/v1/payments/v3/api-docs
+      - name: Wallet Service
+        url: /api/v1/wallets/v3/api-docs
+      - name: QR Service
+        url: /api/v1/qr/v3/api-docs

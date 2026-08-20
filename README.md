@@ -19,9 +19,19 @@ The project is structured as a Maven multi-module repository containing:
 4. `qr-payment-service`: Enforces HTTPS/TLS for secure QR code data processing.
 5. `api-gateway`: Serves the phone UI and routes traffic.
 
+## Database Tables
+
+Each service owns one PostgreSQL table and records the data available to it:
+
+- `api-gateway`: `gateway_request_logs` records API method, path, and timestamp for routed API calls.
+- `user-account-service`: `user_accounts` records the demo mobile number, VPA, role, language, and last profile access.
+- `payment-transaction-service`: `payment_transactions` records payee VPA, amount, note, status, transaction ID, and timestamp for each payment initiation.
+- `wallet-balance-service`: `wallets` records VPA and wallet balance.
+- `qr-payment-service`: `qr_payment_records` records QR collect/pay reference, action type, VPA, amount, and timestamp.
+
 ## Setup & Installation
 
-### 1. Database & Broker Setup (Docker)
+### 1. Database Setup (Docker)
 Since this is a DevOps project, it is highly recommended to run your infrastructure via Docker.
 *For full functionality, start PostgreSQL or configure each service to point to an available PostgreSQL instance.*
 ```bash
@@ -56,6 +66,11 @@ mvn spring-boot:run -pl user-account-service -Dspring-boot.run.arguments="--serv
 mvn spring-boot:run -pl payment-transaction-service -Dspring-boot.run.arguments="--server.port=8082"
 ```
 
+**Start Wallet Balance Service (Port 8084):**
+```bash
+mvn spring-boot:run -pl wallet-balance-service -Dspring-boot.run.arguments="--server.port=8084"
+```
+
 **Start QR Payment Service (Port 8085 — HTTP locally, HTTPS optional):**
 ```bash
 mvn spring-boot:run -pl qr-payment-service
@@ -67,7 +82,7 @@ mvn spring-boot:run -pl qr-payment-service
 This project includes a `render.yaml` Blueprint for one-click deployment.
 
 ### Infrastructure
-- **Render PostgreSQL** — shared database for payment and wallet services
+- **Render PostgreSQL** — shared database used by every service, with one table per service
 - **Render Web Services** — one Docker container per microservice
 
 ### Steps
@@ -97,7 +112,7 @@ To verify the QR service is enforcing TLS:
 
 ### 3. Payment Flow Verification
 To verify the simplified payment path:
-- Start the `api-gateway` and `payment-transaction-service`.
+- Start the `api-gateway`, `user-account-service`, `payment-transaction-service`, `wallet-balance-service`, and `qr-payment-service`.
 - Dial `*99#` in the frontend, choose Send Money, and complete the MPIN prompt.
 - A successful request returns `Payment completed successfully` from `/api/v1/payments/initiate`.
 - A failed request is shown as a failed payment, not as a queued transaction.

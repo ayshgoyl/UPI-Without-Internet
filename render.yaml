@@ -25,6 +25,36 @@ services:
           type: web
           name: payment-transaction-service
           property: hostport
+      - key: WALLET_SERVICE_HOSTPORT
+        fromService:
+          type: web
+          name: wallet-balance-service
+          property: hostport
+      - key: QR_SERVICE_HOSTPORT
+        fromService:
+          type: web
+          name: qr-payment-service
+          property: hostport
+      - key: DB_HOST
+        fromDatabase:
+          name: offline-upi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: offline-upi-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: offline-upi-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: offline-upi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: offline-upi-db
+          property: password
 
   - type: web
     name: user-account-service
@@ -33,6 +63,27 @@ services:
     dockerContext: .
     plan: free
     autoDeployTrigger: commit
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: offline-upi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: offline-upi-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: offline-upi-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: offline-upi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: offline-upi-db
+          property: password
 
   - type: web
     name: payment-transaction-service
@@ -102,3 +153,23 @@ services:
     envVars:
       - key: SSL_ENABLED
         value: "false"
+      - key: DB_HOST
+        fromDatabase:
+          name: offline-upi-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: offline-upi-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: offline-upi-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: offline-upi-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: offline-upi-db
+          property: password
