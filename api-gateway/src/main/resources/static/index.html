@@ -3,99 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline UPI Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>UPI USSD — Phone Dialer</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <div class="background-effects">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
+    <div class="stage">
+        <aside class="lab-note">
+            <h1>Offline UPI test rig</h1>
+            <p>This is a phone-style caller used to exercise the platform over <strong>USSD</strong> (*99#), the same channel used for offline / feature-phone payments.</p>
+            <ol>
+                <li>Dial <code>*99#</code></li>
+                <li>Press the green call button</li>
+                <li>Use numbered replies in the USSD session</li>
+            </ol>
+            <p class="lab-hint">Default MPIN for this lab: <code>1234</code></p>
+        </aside>
+
+        <div class="phone" aria-label="Mobile phone test interface">
+            <div class="phone-bezel">
+                <div class="phone-earpiece"></div>
+                <div class="phone-screen">
+                    <header class="status-bar">
+                        <span id="clock">9:41</span>
+                        <span class="status-icons">
+                            <span class="signal" title="Signal"></span>
+                            <span class="wifi" title="USSD does not require data"></span>
+                            <span class="battery" title="Battery"></span>
+                        </span>
+                    </header>
+
+                    <section id="dialer-app" class="app-pane">
+                        <div class="dialer-header">
+                            <span class="carrier">Airtel</span>
+                            <h2>Phone</h2>
+                        </div>
+                        <div class="number-display">
+                            <input id="dial-input" type="text" inputmode="tel" autocomplete="off" spellcheck="false" placeholder="Enter number or USSD" aria-label="Number to dial">
+                            <button type="button" id="backspace-btn" class="backspace" aria-label="Delete">
+                                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M22 12H7M10 8l-4 4 4 4"/>
+                                    <path d="M4 7h11a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3H4z" opacity="0"/>
+                                    <path d="M21 7v10a2 2 0 0 1-2 2H9l-6-7 6-7h10a2 2 0 0 1 2 2z"/>
+                                    <path d="M15 10l-4 4M11 10l4 4"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="keypad" id="keypad">
+                            <button type="button" data-key="1">1<span> </span></button>
+                            <button type="button" data-key="2">2<span>ABC</span></button>
+                            <button type="button" data-key="3">3<span>DEF</span></button>
+                            <button type="button" data-key="4">4<span>GHI</span></button>
+                            <button type="button" data-key="5">5<span>JKL</span></button>
+                            <button type="button" data-key="6">6<span>MNO</span></button>
+                            <button type="button" data-key="7">7<span>PQRS</span></button>
+                            <button type="button" data-key="8">8<span>TUV</span></button>
+                            <button type="button" data-key="9">9<span>WXYZ</span></button>
+                            <button type="button" data-key="*">*<span></span></button>
+                            <button type="button" data-key="0">0<span>+</span></button>
+                            <button type="button" data-key="#">#<span></span></button>
+                        </div>
+                        <div class="call-row">
+                            <button type="button" id="call-btn" class="call-btn" aria-label="Call">
+                                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1.1-.3 1.2.4 2.5.6 3.8.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.4 21 3 13.6 3 4.5 3 3.9 3.4 3.5 4 3.5H7.5c.6 0 1 .4 1 1 0 1.3.2 2.6.6 3.8.1.4 0 .8-.3 1.1l-2.2 2.4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section id="call-screen" class="app-pane hidden">
+                        <p class="call-label" id="call-label">Calling…</p>
+                        <p class="call-number" id="call-number"></p>
+                        <p class="call-timer" id="call-timer">USSD</p>
+                        <button type="button" id="end-call-btn" class="end-call-btn" aria-label="End call">
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                                <path d="M12 9c-4.4 0-8.3 1.5-10.4 3.8-.4.4-.4 1 0 1.4l2 2c.4.4 1 .4 1.4 0 1.2-1.2 3.9-2.4 7-2.4s5.8 1.2 7 2.4c.4.4 1 .4 1.4 0l2-2c.4-.4.4-1 0-1.4C20.3 10.5 16.4 9 12 9z"/>
+                            </svg>
+                        </button>
+                    </section>
+
+                    <div id="ussd-overlay" class="ussd-overlay hidden" role="dialog" aria-labelledby="ussd-title">
+                        <div class="ussd-card">
+                            <h3 id="ussd-title">UPI</h3>
+                            <pre id="ussd-body" class="ussd-body"></pre>
+                            <label class="ussd-input-wrap" id="ussd-input-wrap">
+                                <span>Reply</span>
+                                <input id="ussd-reply" type="text" inputmode="numeric" autocomplete="off" maxlength="64">
+                            </label>
+                            <div class="ussd-actions">
+                                <button type="button" id="ussd-cancel">Cancel</button>
+                                <button type="button" id="ussd-send">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="home-indicator"></div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <main class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <i class="fa-solid fa-bolt logo-icon"></i>
-                <h1>UPI Offline</h1>
-            </div>
-            <div class="network-status" id="network-status">
-                <span class="status-indicator online"></span>
-                <span class="status-text">Online</span>
-            </div>
-        </header>
-
-        <section class="payment-card glass-panel">
-            <div class="card-header">
-                <h2>Send Money</h2>
-                <p>Transfer instantly, even offline</p>
-            </div>
-
-            <form id="payment-form">
-                <div class="input-group">
-                    <label for="upi-id">UPI ID / Phone Number</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-user icon"></i>
-                        <input type="text" id="upi-id" placeholder="example@upi" required autocomplete="off">
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="amount">Amount (₹)</label>
-                    <div class="input-wrapper amount-wrapper">
-                        <span class="currency-symbol">₹</span>
-                        <input type="number" id="amount" placeholder="0" min="1" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="note">Note (Optional)</label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-pencil icon"></i>
-                        <input type="text" id="note" placeholder="What's this for?" autocomplete="off">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-primary" id="pay-btn">
-                    <span class="btn-text">Pay Now</span>
-                    <div class="spinner hidden"></div>
-                </button>
-            </form>
-
-            <div id="payment-result" class="result-message hidden">
-                <div class="result-icon">
-                    <i class="fa-solid fa-check-circle" id="result-icon-fa"></i>
-                </div>
-                <h3 id="result-title">Success</h3>
-                <p id="result-text">Payment completed successfully.</p>
-                <button id="new-payment-btn" class="btn-secondary">New Payment</button>
-            </div>
-        </section>
-
-        <section class="recent-transactions">
-            <h3>Recent Activity</h3>
-            <div class="transaction-list">
-                <div class="transaction-item">
-                    <div class="tx-icon receive"><i class="fa-solid fa-arrow-down"></i></div>
-                    <div class="tx-details">
-                        <span class="tx-name">Alice Smith</span>
-                        <span class="tx-time">Today, 10:30 AM</span>
-                    </div>
-                    <div class="tx-amount positive">+₹500</div>
-                </div>
-                <div class="transaction-item offline-queued">
-                    <div class="tx-icon offline"><i class="fa-solid fa-clock"></i></div>
-                    <div class="tx-details">
-                        <span class="tx-name">Coffee Shop</span>
-                        <span class="tx-time">Offline • Queued</span>
-                    </div>
-                    <div class="tx-amount negative">-₹120</div>
-                </div>
-            </div>
-        </section>
-    </main>
-
     <script src="/app.js"></script>
 </body>
 </html>
