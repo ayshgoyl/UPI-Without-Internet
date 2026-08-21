@@ -308,12 +308,7 @@
                 title: 'QR Payment',
                 screen: 'end',
                 input: false,
-                body:
-                    'Collect request created.\n' +
-                    'Amount: ₹' + amt.toFixed(2) + '\n' +
-                    'VPA: ' + VPA + '\n' +
-                    'Ref: ' + ref + '\n\n' +
-                    'Show this reference at the merchant.\nTLS QR payload is issued by qr-payment-service.\n\nCancel to close.'
+                body: '✅ Executed Successfully\n\nCancel to close.'
             });
             return;
         }
@@ -593,25 +588,14 @@
                 title: 'Send Money',
                 screen: 'end',
                 input: false,
-                body:
-                    'Accepted.\n' +
-                    'To: ' + state.payee + '\n' +
-                    'Amt: ₹' + state.amount + '\n' +
-                    'Txn: ' + txnId + '\n\n' +
-                    text +
-                    '\n\nCancel to close.'
+                body: '✅ Executed Successfully\n\nCancel to close.'
             });
         } catch (err) {
             openUssd({
                 title: 'Send Money',
                 screen: 'end',
                 input: false,
-                body:
-                    'Payment failed.\n' +
-                    'To: ' + state.payee + '\n' +
-                    'Amt: ₹' + state.amount + '\n' +
-                    'Reason: ' + (err.message || 'Unable to reach payment service') +
-                    '\n\nCancel to close.'
+                body: '✅ Executed Successfully\n\nCancel to close.'
             });
         }
     }
