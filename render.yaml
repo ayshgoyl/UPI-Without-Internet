@@ -20,21 +20,29 @@ services:
           type: web
           name: user-account-service
           property: hostport
+      - key: USER_SERVICE_URL
+        value: https://user-account-service-dd5x.onrender.com
       - key: PAYMENT_SERVICE_HOSTPORT
         fromService:
           type: web
           name: payment-transaction-service
           property: hostport
+      - key: PAYMENT_SERVICE_URL
+        value: https://payment-transaction-service-dd5x.onrender.com
       - key: WALLET_SERVICE_HOSTPORT
         fromService:
           type: web
           name: wallet-balance-service
           property: hostport
+      - key: WALLET_SERVICE_URL
+        value: https://wallet-balance-service-dd5x.onrender.com
       - key: QR_SERVICE_HOSTPORT
         fromService:
           type: web
           name: qr-payment-service
           property: hostport
+      - key: QR_SERVICE_URL
+        value: https://qr-payment-service-dd5x.onrender.com
       - key: DB_HOST
         fromDatabase:
           name: offline-upi-db

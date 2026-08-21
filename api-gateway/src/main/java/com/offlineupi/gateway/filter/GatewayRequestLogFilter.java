@@ -2,6 +2,8 @@ package com.offlineupi.gateway.filter;
 
 import com.offlineupi.gateway.entity.GatewayRequestLog;
 import com.offlineupi.gateway.repository.GatewayRequestLogRepository;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,10 @@ public class GatewayRequestLogFilter implements WebFilter {
     }
 
     private void logGatewayRequestFailure(ServerWebExchange exchange, String path, Throwable error) {
+        if (hasCause(error, UnknownHostException.class) || hasCause(error, ConnectException.class)) {
+            return;
+        }
+
         HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
         if (statusCode == null && error instanceof ResponseStatusException responseStatusException) {
             statusCode = responseStatusException.getStatusCode();
@@ -80,5 +86,16 @@ public class GatewayRequestLogFilter implements WebFilter {
                 statusCode,
                 error.getMessage(),
                 error);
+    }
+
+    private boolean hasCause(Throwable error, Class<? extends Throwable> causeType) {
+        Throwable current = error;
+        while (current != null) {
+            if (causeType.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
