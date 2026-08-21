@@ -66,17 +66,17 @@
     callBtn.addEventListener('click', placeCall);
     endCallBtn.addEventListener('click', hangUp);
     ussdCancel.addEventListener('click', closeUssd);
-    ussdSend.addEventListener('click', submitUssd);
+    ussdSend.addEventListener('click', submitUssdSafely);
     ussdOptions.addEventListener('click', (e) => {
         const option = e.target.closest('button[data-reply]');
         if (!option) return;
         ussdReply.value = option.dataset.reply;
-        submitUssd();
+        submitUssdSafely();
     });
     ussdReply.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            submitUssd();
+            submitUssdSafely();
         }
     });
 
@@ -233,6 +233,20 @@
                 '6 Change MPIN\n' +
                 '7 Service Map\n' +
                 '0 Exit'
+        });
+    }
+
+    function submitUssdSafely() {
+        submitUssd().catch((err) => {
+            openUssd({
+                title: 'Service Error',
+                screen: 'end',
+                input: false,
+                body:
+                    'Database write was not completed.\n' +
+                    'Reason: ' + (err.message || 'Unable to reach service') +
+                    '\n\nCancel to close.'
+            });
         });
     }
 
@@ -442,7 +456,7 @@
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Linked mobile\n' + profile.mobileNumber + '\nSIM authenticated via USSD.\nCancel to close.'
+                body: 'Linked mobile\n' + profile.mobileNumber + '\nNew user_accounts row saved.\nSIM authenticated via USSD.\nCancel to close.'
             });
             return;
         }
@@ -451,7 +465,7 @@
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Primary VPA\n' + profile.upiId + '\nCancel to close.'
+                body: 'Primary VPA\n' + profile.upiId + '\nNew user_accounts row saved.\nCancel to close.'
             });
             return;
         }
@@ -460,7 +474,7 @@
                 title: 'My Account',
                 screen: 'end',
                 input: false,
-                body: 'Profile: ' + profile.roleName + '\nRBAC: payments, wallet-read\nLanguage: ' + profile.languageCode + '\nCancel to close.'
+                body: 'Profile: ' + profile.roleName + '\nRBAC: payments, wallet-read\nLanguage: ' + profile.languageCode + '\nNew user_accounts row saved.\nCancel to close.'
             });
             return;
         }
@@ -515,7 +529,7 @@
                 body:
                     'Available wallet balance\n₹' +
                     formatMoney(state.balance) +
-                    '\nLocked writes use pessimistic DB lock on wallet-balance-service.\n\nCancel to close.'
+                    '\nNew wallets row saved by wallet-balance-service.\n\nCancel to close.'
             });
             return;
         }
@@ -606,47 +620,31 @@
     }
 
     async function fetchUserProfile() {
-        try {
-            const response = await fetch('/api/v1/users/profile');
-            if (!response.ok) {
-                throw new Error('User service returned HTTP ' + response.status);
-            }
-            return await response.json();
-        } catch (err) {
-            return {
-                mobileNumber: MSISDN,
-                upiId: VPA,
-                roleName: 'CUSTOMER',
-                languageCode: 'EN'
-            };
+        const response = await fetch('/api/v1/users/profile');
+        if (!response.ok) {
+            throw new Error('User service returned HTTP ' + response.status);
         }
+        return await response.json();
     }
 
     async function fetchWalletBalance() {
-        try {
-            const response = await fetch('/api/v1/wallets/' + encodeURIComponent(VPA));
-            if (!response.ok) {
-                throw new Error('Wallet service returned HTTP ' + response.status);
-            }
-            return await response.json();
-        } catch (err) {
-            return {
-                upiId: VPA,
-                balance: state.balance
-            };
+        const response = await fetch('/api/v1/wallets/' + encodeURIComponent(VPA));
+        if (!response.ok) {
+            throw new Error('Wallet service returned HTTP ' + response.status);
         }
+        return await response.json();
     }
 
     async function recordQrPayment(payload) {
-        try {
-            await fetch('/api/v1/qr/records', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-        } catch (err) {
-            // QR service is non-critical for the phone demo screen.
+        const response = await fetch('/api/v1/qr/records', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            throw new Error('QR service returned HTTP ' + response.status);
         }
+        return await response.json();
     }
 
     function toastBody(msg) {

@@ -3,6 +3,7 @@ package com.offlineupi.user.controller;
 import com.offlineupi.user.entity.UserAccount;
 import com.offlineupi.user.repository.UserAccountRepository;
 import java.time.Instant;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,23 +27,23 @@ public class UserAccountController {
 
     @GetMapping("/profile")
     public UserAccount profile() {
-        log.info("User profile request received: mobile={}", DEFAULT_MOBILE);
+        String auditMobileNumber = DEFAULT_MOBILE + "-" + UUID.randomUUID();
+        log.info("User profile action received: baseMobile={}, auditMobile={}", DEFAULT_MOBILE, auditMobileNumber);
 
         try {
-            UserAccount account = userAccountRepository.findById(DEFAULT_MOBILE)
-                    .orElseGet(() -> {
-                        log.info("User account not found; creating default profile: mobile={}, upiId={}",
-                                DEFAULT_MOBILE, DEFAULT_UPI_ID);
-                        return new UserAccount(DEFAULT_MOBILE, DEFAULT_UPI_ID, "CUSTOMER", "EN", Instant.now());
-                    });
-            account.setLastAccessedAt(Instant.now());
+            UserAccount account = new UserAccount(
+                    auditMobileNumber,
+                    DEFAULT_UPI_ID,
+                    "CUSTOMER",
+                    "EN",
+                    Instant.now());
             UserAccount savedAccount = userAccountRepository.save(account);
-            log.info("User profile saved successfully: mobile={}, upiId={}",
+            log.info("User profile action row saved successfully: mobile={}, upiId={}",
                     savedAccount.getMobileNumber(), savedAccount.getUpiId());
             return savedAccount;
         } catch (Exception e) {
-            log.error("Failed to load or save user profile: mobile={}, error={}",
-                    DEFAULT_MOBILE, e.getMessage(), e);
+            log.error("Failed to save user profile action row: baseMobile={}, auditMobile={}, error={}",
+                    DEFAULT_MOBILE, auditMobileNumber, e.getMessage(), e);
             throw e;
         }
     }

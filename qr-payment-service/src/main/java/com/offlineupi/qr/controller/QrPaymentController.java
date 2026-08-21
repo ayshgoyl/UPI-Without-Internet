@@ -34,9 +34,10 @@ public class QrPaymentController {
                 request != null ? request.upiId() : "null",
                 request != null ? request.amount() : "null");
 
-        String referenceId = request != null && request.referenceId() != null
+        String requestedReferenceId = request != null && request.referenceId() != null
                 ? request.referenceId()
                 : UUID.randomUUID().toString();
+        String referenceId = requestedReferenceId + "-" + UUID.randomUUID();
         String actionType = request != null && request.actionType() != null ? request.actionType() : "UNKNOWN";
         String upiId = request != null && request.upiId() != null ? request.upiId() : "unknown";
         String amount = request != null && request.amount() != null ? request.amount() : "n/a";
@@ -44,12 +45,12 @@ public class QrPaymentController {
         try {
             QrPaymentRecord savedRecord = qrPaymentRecordRepository.save(
                     new QrPaymentRecord(referenceId, actionType, upiId, amount, Instant.now()));
-            log.info("QR payment record saved successfully: referenceId={}, actionType={}, upiId={}",
-                    referenceId, actionType, upiId);
+            log.info("QR payment action row saved successfully: requestedReferenceId={}, storedReferenceId={}, actionType={}, upiId={}",
+                    requestedReferenceId, referenceId, actionType, upiId);
             return savedRecord;
         } catch (Exception e) {
-            log.error("Failed to save QR payment record: referenceId={}, actionType={}, upiId={}, amount={}, error={}",
-                    referenceId, actionType, upiId, amount, e.getMessage(), e);
+            log.error("Failed to save QR payment action row: requestedReferenceId={}, storedReferenceId={}, actionType={}, upiId={}, amount={}, error={}",
+                    requestedReferenceId, referenceId, actionType, upiId, amount, e.getMessage(), e);
             throw e;
         }
     }

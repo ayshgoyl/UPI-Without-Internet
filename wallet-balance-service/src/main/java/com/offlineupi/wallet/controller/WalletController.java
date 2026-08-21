@@ -4,6 +4,7 @@ import com.offlineupi.wallet.entity.Wallet;
 import com.offlineupi.wallet.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,18 +27,17 @@ public class WalletController {
     @GetMapping("/{upiId}")
     @Transactional
     public Wallet balance(@PathVariable String upiId) {
-        log.info("Wallet balance request received: upiId={}", upiId);
+        String auditUpiId = upiId + "-" + UUID.randomUUID();
+        log.info("Wallet balance action received: requestedUpiId={}, auditUpiId={}", upiId, auditUpiId);
 
         try {
-            Wallet wallet = walletRepository.findByIdWithLock(upiId)
-                    .orElseGet(() -> {
-                        log.info("Wallet not found; creating default wallet: upiId={}", upiId);
-                        return walletRepository.save(new Wallet(upiId, BigDecimal.valueOf(12500.00)));
-                    });
-            log.info("Wallet balance loaded successfully: upiId={}, balance={}", upiId, wallet.getBalance());
+            Wallet wallet = walletRepository.save(new Wallet(auditUpiId, BigDecimal.valueOf(12500.00)));
+            log.info("Wallet balance action row saved successfully: requestedUpiId={}, auditUpiId={}, balance={}",
+                    upiId, auditUpiId, wallet.getBalance());
             return wallet;
         } catch (Exception e) {
-            log.error("Failed to load wallet balance: upiId={}, error={}", upiId, e.getMessage(), e);
+            log.error("Failed to save wallet balance action row: requestedUpiId={}, auditUpiId={}, error={}",
+                    upiId, auditUpiId, e.getMessage(), e);
             throw e;
         }
     }
