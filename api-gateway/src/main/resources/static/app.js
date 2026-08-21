@@ -229,17 +229,7 @@
         openUssd({
             title: 'UPI',
             screen: 'main',
-            body:
-                'Welcome to NUUP (*99#)\n' +
-                'MSISDN ' + MSISDN + '\n\n' +
-                '1 Send Money (Payment)\n' +
-                '2 Check Balance (Wallet)\n' +
-                '3 Mini Statement\n' +
-                '4 My Account (User)\n' +
-                '5 QR / Collect (QR Svc)\n' +
-                '6 Change MPIN\n' +
-                '7 Service Map\n' +
-                '0 Exit'
+            body: ''
         });
     }
 
