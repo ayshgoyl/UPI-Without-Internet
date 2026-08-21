@@ -17,6 +17,7 @@
     const overlay = document.getElementById('ussd-overlay');
     const ussdTitle = document.getElementById('ussd-title');
     const ussdBody = document.getElementById('ussd-body');
+    const ussdOptions = document.getElementById('ussd-options');
     const ussdReply = document.getElementById('ussd-reply');
     const ussdInputWrap = document.getElementById('ussd-input-wrap');
     const ussdSend = document.getElementById('ussd-send');
@@ -66,6 +67,12 @@
     endCallBtn.addEventListener('click', hangUp);
     ussdCancel.addEventListener('click', closeUssd);
     ussdSend.addEventListener('click', submitUssd);
+    ussdOptions.addEventListener('click', (e) => {
+        const option = e.target.closest('button[data-reply]');
+        if (!option) return;
+        ussdReply.value = option.dataset.reply;
+        submitUssd();
+    });
     ussdReply.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -143,10 +150,72 @@
         overlay.classList.remove('hidden');
         ussdInputWrap.classList.toggle('hidden', !input);
         ussdSend.classList.toggle('hidden', !input);
+        renderUssdOptions(screen, body, input);
         ussdReply.value = '';
         if (input) {
             setTimeout(() => ussdReply.focus(), 50);
         }
+    }
+
+    function renderUssdOptions(screen, body, input) {
+        ussdOptions.innerHTML = '';
+        const options = getUssdOptions(screen, body);
+        ussdOptions.classList.toggle('hidden', !input || options.length === 0);
+
+        options.forEach((item) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'ussd-option';
+            button.dataset.reply = item.reply;
+            button.setAttribute('aria-label', 'Reply ' + item.reply + ': ' + item.label);
+
+            const key = document.createElement('span');
+            key.className = 'ussd-option-key';
+            key.textContent = item.reply;
+
+            const label = document.createElement('span');
+            label.className = 'ussd-option-text';
+            label.textContent = item.label;
+
+            button.append(key, label);
+            ussdOptions.append(button);
+        });
+    }
+
+    function getUssdOptions(screen, body) {
+        const menus = {
+            main: [
+                ['1', 'Send Money'],
+                ['2', 'Check Balance'],
+                ['3', 'Mini Statement'],
+                ['4', 'My Account'],
+                ['5', 'QR / Collect'],
+                ['6', 'Change MPIN'],
+                ['7', 'Service Map'],
+                ['0', 'Exit']
+            ],
+            account: [
+                ['1', 'Linked mobile'],
+                ['2', 'Linked VPA'],
+                ['3', 'Language / RBAC profile'],
+                ['0', 'Home']
+            ],
+            qr: [
+                ['1', 'Generate collect QR ref'],
+                ['2', 'Pay using QR reference'],
+                ['0', 'Home']
+            ]
+        };
+
+        if (menus[screen]) {
+            return menus[screen].map(([reply, label]) => ({ reply, label }));
+        }
+
+        return body
+            .split('\n')
+            .map((line) => line.match(/^(\d)\s+(.+)$/))
+            .filter(Boolean)
+            .map((match) => ({ reply: match[1], label: match[2] }));
     }
 
     function openMainMenu() {

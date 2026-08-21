@@ -5,10 +5,13 @@ import com.offlineupi.gateway.repository.GatewayRequestLogRepository;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -50,14 +53,32 @@ public class GatewayRequestLogFilter implements WebFilter {
                             });
         }
         return chain.filter(exchange)
-                .doOnError(error -> log.error(
-                        "Gateway request failed: method={}, path={}, query={}, remoteAddress={}, statusCode={}, error={}",
-                        exchange.getRequest().getMethod(),
-                        path,
-                        exchange.getRequest().getURI().getQuery(),
-                        exchange.getRequest().getRemoteAddress(),
-                        exchange.getResponse().getStatusCode(),
-                        error.getMessage(),
-                        error));
+                .doOnError(error -> logGatewayRequestFailure(exchange, path, error));
+    }
+
+    private void logGatewayRequestFailure(ServerWebExchange exchange, String path, Throwable error) {
+        HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
+        if (statusCode == null && error instanceof ResponseStatusException responseStatusException) {
+            statusCode = responseStatusException.getStatusCode();
+        }
+
+        if (HttpStatus.NOT_FOUND.equals(statusCode) && !path.startsWith("/api/")) {
+            log.warn("Gateway resource not found: method={}, path={}, query={}, remoteAddress={}",
+                    exchange.getRequest().getMethod(),
+                    path,
+                    exchange.getRequest().getURI().getQuery(),
+                    exchange.getRequest().getRemoteAddress());
+            return;
+        }
+
+        log.error(
+                "Gateway request failed: method={}, path={}, query={}, remoteAddress={}, statusCode={}, error={}",
+                exchange.getRequest().getMethod(),
+                path,
+                exchange.getRequest().getURI().getQuery(),
+                exchange.getRequest().getRemoteAddress(),
+                statusCode,
+                error.getMessage(),
+                error);
     }
 }

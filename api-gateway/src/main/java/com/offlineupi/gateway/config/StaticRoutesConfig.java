@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.HEAD;
 
 @Configuration
 public class StaticRoutesConfig {
@@ -20,6 +21,7 @@ public class StaticRoutesConfig {
                 .route(GET("/"), request -> ServerResponse.ok()
                         .contentType(MediaType.TEXT_HTML)
                         .body(BodyInserters.fromResource(new ClassPathResource("static/index.html"))))
+                .andRoute(HEAD("/"), request -> ServerResponse.ok().build())
                 .andRoute(GET("/index.html"), request -> ServerResponse.ok()
                         .contentType(MediaType.TEXT_HTML)
                         .body(BodyInserters.fromResource(new ClassPathResource("static/index.html"))))

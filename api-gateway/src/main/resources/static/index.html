@@ -84,8 +84,12 @@
 
                     <div id="ussd-overlay" class="ussd-overlay hidden" role="dialog" aria-labelledby="ussd-title">
                         <div class="ussd-card">
-                            <h3 id="ussd-title">UPI</h3>
+                            <div class="ussd-card-header">
+                                <span class="ussd-chip">*99# live session</span>
+                                <h3 id="ussd-title">UPI</h3>
+                            </div>
                             <pre id="ussd-body" class="ussd-body"></pre>
+                            <div id="ussd-options" class="ussd-options" aria-label="USSD menu options"></div>
                             <label class="ussd-input-wrap" id="ussd-input-wrap">
                                 <span>Reply</span>
                                 <input id="ussd-reply" type="text" inputmode="numeric" autocomplete="off" maxlength="64">

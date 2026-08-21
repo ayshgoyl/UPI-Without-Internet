@@ -17,19 +17,19 @@ spring:
     gateway:
       routes:
         - id: user-account-service
-          uri: http://${USER_SERVICE_HOSTPORT:localhost:8081}
+          uri: ${USER_SERVICE_URL:http://${USER_SERVICE_HOSTPORT:localhost:8081}}
           predicates:
             - Path=/api/v1/users/**
         - id: payment-transaction-service
-          uri: http://${PAYMENT_SERVICE_HOSTPORT:localhost:8082}
+          uri: ${PAYMENT_SERVICE_URL:http://${PAYMENT_SERVICE_HOSTPORT:localhost:8082}}
           predicates:
             - Path=/api/v1/payments/**
         - id: wallet-balance-service
-          uri: http://${WALLET_SERVICE_HOSTPORT:localhost:8084}
+          uri: ${WALLET_SERVICE_URL:http://${WALLET_SERVICE_HOSTPORT:localhost:8084}}
           predicates:
             - Path=/api/v1/wallets/**
         - id: qr-payment-service
-          uri: http://${QR_SERVICE_HOSTPORT:localhost:8085}
+          uri: ${QR_SERVICE_URL:http://${QR_SERVICE_HOSTPORT:localhost:8085}}
           predicates:
             - Path=/api/v1/qr/**
 
