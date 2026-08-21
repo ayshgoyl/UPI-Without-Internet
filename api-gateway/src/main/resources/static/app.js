@@ -177,6 +177,13 @@
             label.className = 'ussd-option-text';
             label.textContent = item.label;
 
+            if (item.microservice) {
+                const microservice = document.createElement('span');
+                microservice.className = 'ussd-option-service';
+                microservice.textContent = item.microservice + ' Microservice';
+                label.append(document.createElement('br'), microservice);
+            }
+
             button.append(key, label);
             ussdOptions.append(button);
         });
@@ -185,30 +192,30 @@
     function getUssdOptions(screen, body) {
         const menus = {
             main: [
-                ['1', 'Send Money'],
-                ['2', 'Check Balance'],
-                ['3', 'Mini Statement'],
-                ['4', 'My Account'],
-                ['5', 'QR / Collect'],
-                ['6', 'Change MPIN'],
-                ['7', 'Service Map'],
-                ['0', 'Exit']
+                ['1', 'Send Money', 'Payment Transaction'],
+                ['2', 'Check Balance', 'Wallet Balance'],
+                ['3', 'Mini Statement', 'Payment Transaction'],
+                ['4', 'My Account', 'User Account'],
+                ['5', 'QR / Collect', 'QR Payment'],
+                ['6', 'Change MPIN', 'User Account'],
+                ['7', 'Service Map', 'API Gateway'],
+                ['0', 'Exit', 'API Gateway']
             ],
             account: [
-                ['1', 'Linked mobile'],
-                ['2', 'Linked VPA'],
-                ['3', 'Language / RBAC profile'],
-                ['0', 'Home']
+                ['1', 'Linked mobile', 'User Account'],
+                ['2', 'Linked VPA', 'User Account'],
+                ['3', 'Language / RBAC profile', 'User Account'],
+                ['0', 'Home', 'API Gateway']
             ],
             qr: [
-                ['1', 'Generate collect QR ref'],
-                ['2', 'Pay using QR reference'],
-                ['0', 'Home']
+                ['1', 'Generate collect QR ref', 'QR Payment'],
+                ['2', 'Pay using QR reference', 'QR Payment'],
+                ['0', 'Home', 'API Gateway']
             ]
         };
 
         if (menus[screen]) {
-            return menus[screen].map(([reply, label]) => ({ reply, label }));
+            return menus[screen].map(([reply, label, microservice]) => ({ reply, label, microservice }));
         }
 
         return body

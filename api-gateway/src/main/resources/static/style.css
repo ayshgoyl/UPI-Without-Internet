@@ -484,6 +484,14 @@ body {
     line-height: 1.2;
 }
 
+.ussd-option-service {
+    display: inline-block;
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 650;
+    margin-top: 3px;
+}
+
 .ussd-input-wrap {
     display: flex;
     flex-direction: column;
