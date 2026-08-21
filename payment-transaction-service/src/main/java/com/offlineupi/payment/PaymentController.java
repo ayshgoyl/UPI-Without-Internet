@@ -54,7 +54,8 @@ public class PaymentController {
             
             log.info("Payment completed successfully: transactionId={}", generatedTransactionId);
         } catch (Exception e) {
-            log.error("Failed to complete payment transaction: {}", e.getMessage(), e);
+            log.error("Failed to complete payment transaction: transactionId={}, payee={}, amount={}, note={}, error={}",
+                    generatedTransactionId, payee, amount, note, e.getMessage(), e);
             throw e;
         }
 
